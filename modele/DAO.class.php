@@ -1,5 +1,4 @@
 <?php
-//pamuel la fraude
 // Projet TraceGPS
 // fichier : modele/DAO.class.php   (DAO : Data Access Object)
 // Rôle : fournit des méthodes d'accès à la bdd tracegps (projet TraceGPS) au moyen de l'objet PDO
@@ -29,7 +28,7 @@
 // getLesPointsDeTrace($idTrace) : fournit la collection des points de la trace $idTrace
 // getUneTrace($idTrace) : fournit un objet Trace à partir de identifiant $idTrace
 // getToutesLesTraces() : fournit la collection de toutes les traces
-// getMesTraces($idUtilisateur) : fournit la collection des traces de l'utilisateur $idUtilisateur
+// getLesTraces($idUtilisateur) : fournit la collection des traces de l'utilisateur $idUtilisateur
 // getLesTracesAutorisees($idUtilisateur) : fournit la collection des traces que l'utilisateur $idUtilisateur a le droit de consulter
 // creerUneTrace(Trace $uneTrace) : enregistre la trace $uneTrace dans la bdd
 // terminerUneTrace($idTrace) : enregistre la fin de la trace d'identifiant $idTrace dans la bdd ainsi que la date de fin
@@ -361,204 +360,6 @@ class DAO
             return false;
     }
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    // --------------------------------------------------------------------------------------
-    // début de la zone attribuée au développeur 2 (xxxxxxxxxxxxxxxxxxxx) : lignes 550 à 749
-    // --------------------------------------------------------------------------------------
-    
 
     
     
@@ -651,6 +452,154 @@ class DAO
     
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    // --------------------------------------------------------------------------------------
+    // début de la zone attribuée au développeur 2 (Samuel GIVRY) : lignes 550 à 749
+    // --------------------------------------------------------------------------------------
+    
+    // getLesPointsDeTrace($idTrace) : fournit la collection des points de la trace $idTrace
+    
+    // fournit la collection  de tous les points de trace (de $idTrace)
+    // le résultat est fourni sous forme d'une collection d'objets Utilisateur
+    
+    
+    public function getLesPointsDeTrace() {
+        // préparation de la requête de recherche
+        $txt_req = "Select id, dateDebut, dateFin, terminee, idUtilisateur, pseudo, nbPoints";
+        $txt_req .= " from tracegps_vue_traces";
+        
+        $req = $this->cnx->prepare($txt_req);
+        // extraction des données
+        $req->execute();
+        $uneLigne = $req->fetch(PDO::FETCH_OBJ);
+        
+        // construction d'une collection d'objets lesPointDetrace
+        $lesPointsDeTrace = array();
+        // tant qu'une ligne est trouvée :
+        while ($uneLigne) {
+            // création d'un objet PointDeTrace
+            $unId = utf8_encode($uneLigne->id);
+            $uneDateDebut = utf8_encode($uneLigne->dateDebut);
+            $uneDateFin = utf8_encode($uneLigne->dateFin);
+            $terminee = utf8_encode($uneLigne->terminee);
+            $idUtilisateur = utf8_encode($uneLigne->idUtilisateur);
+            $unPseudo = utf8_encode($uneLigne->pseudo);
+            $unNbPoints = utf8_encode($uneLigne->nbPoints);
+            
+            $unPointDeTrace = new Utilisateur($unId, $uneDateDebut, $uneDateFin, $terminee, $idUtilisateur, $unPseudo, $unNbPoints);
+            // ajout du pointDeTrace à la collection
+            $lesPointsDeTrace[] = $unPointDeTrace;
+            // extrait la ligne suivante
+            $uneLigne = $req->fetch(PDO::FETCH_OBJ);
+        }
+        // libère les ressources du jeu de données
+        $req->closeCursor();
+        // fourniture de la collection
+        return $lesPointsDeTrace;
+    }
     
     
     
