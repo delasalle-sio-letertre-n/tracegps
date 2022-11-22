@@ -31,10 +31,18 @@ include_once ('DAO.class.php');
 $dao = new DAO();
 
 
-// test de la méthode xxxxxxxxxxxxxxxxxxxxxxxxxxx ----------------------------------------------------------
-// modifié par xxxxxxxxxxxxxxxxx le xxxxxxxxxx
-echo "<h3>Test de Samuel Givry : </h3>";
-// A CONTINUER .........
+// test de la méthode getLesPointsDeTrace ----------------------------------------------------------
+// modifié par Samuel Givry le 22/11/2022
+echo "<h3>Test de getLesPointsDeTrace : </h3>";
+
+$lesPointsDeTrace = $dao->getLesPointsDeTrace();
+$nbReponses = sizeof($lesPointsDeTrace);
+echo "<p>Nombre de point : " . $nbReponses . "</p>";
+// affichage des points
+foreach ($lesPointsDeTrace as $unPointDeTrace)
+{	echo ($unPointDeTrace->toString());
+echo ('<br>');
+}
 
 
 

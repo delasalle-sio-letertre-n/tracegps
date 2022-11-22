@@ -572,7 +572,7 @@ class DAO
     
     public function getLesPointsDeTrace() {
         // préparation de la requête de recherche
-        $txt_req = "Select id, dateDebut, dateFin, terminee, idUtilisateur, pseudo, nbPoints";
+        $txt_req = "Select idTrace, id, dateHeure, rythmeCardio, tempsCumule, distanceCumulee, vitesse";
         $txt_req .= " from tracegps_vue_traces";
         
         $req = $this->cnx->prepare($txt_req);
@@ -585,15 +585,15 @@ class DAO
         // tant qu'une ligne est trouvée :
         while ($uneLigne) {
             // création d'un objet PointDeTrace
+            $unIdtrace = utf8_encode($uneLigne->idTrace);
             $unId = utf8_encode($uneLigne->id);
-            $uneDateDebut = utf8_encode($uneLigne->dateDebut);
-            $uneDateFin = utf8_encode($uneLigne->dateFin);
-            $terminee = utf8_encode($uneLigne->terminee);
-            $idUtilisateur = utf8_encode($uneLigne->idUtilisateur);
-            $unPseudo = utf8_encode($uneLigne->pseudo);
-            $unNbPoints = utf8_encode($uneLigne->nbPoints);
+            $uneDateHeure = utf8_encode($uneLigne->dateHeure);
+            $unRythmeCardio = utf8_encode($uneLigne->rythmeCardio);
+            $unTempsCumule = utf8_encode($uneLigne->tempsCumule);
+            $uneDistanceCumulee = utf8_encode($uneLigne->distanceCumulee);
+            $uneVitesse = utf8_encode($uneLigne->vitesse);
             
-            $unPointDeTrace = new Utilisateur($unId, $uneDateDebut, $uneDateFin, $terminee, $idUtilisateur, $unPseudo, $unNbPoints);
+            $unPointDeTrace = new PointDeTrace($unIdtrace, $unId, $uneDateHeure, $unRythmeCardio, $unTempsCumule, $uneDistanceCumulee, $uneVitesse);
             // ajout du pointDeTrace à la collection
             $lesPointsDeTrace[] = $unPointDeTrace;
             // extrait la ligne suivante
