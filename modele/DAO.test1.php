@@ -30,8 +30,8 @@
 include_once ('DAO.class.php');
 $dao = new DAO();
 
-// test de la méthode existeAdrMailUtilisateur ----------------------------------------------------
-// modifié par dP le 12/8/2021
+// test de la mï¿½thode existeAdrMailUtilisateur ----------------------------------------------------
+// modifiï¿½ par dP le 12/8/2021
 echo "<h3>Test de existeAdrMailUtilisateur : </h3>";
 if ($dao->existeAdrMailUtilisateur("admin@gmail.com")) $existe = "oui"; else $existe = "non";
 echo "<p>Existence de l'utilisateur 'admin@gmail.com' : <b>" . $existe . "</b><br>";
@@ -41,7 +41,7 @@ echo "Existence de l'utilisateur 'delasalle.sio.eleves@gmail.com' : <b>" . $exis
 
 // test de la mÃ©thode xxxxxxxxxxxxxxxxxxxxxxxxxxx ----------------------------------------------------------
 // modifiÃ© par xxxxxxxxxxxxxxxxx le xxxxxxxxxx
-echo "<h3>Test de xxxxxxxxxxxxxxxxx : </h3>";
+echo "<h3>Test de Nicolas Le Tertre : </h3>";
 // A CONTINUER .........
 
 
