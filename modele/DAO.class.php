@@ -19,7 +19,7 @@
 
 // liste des méthodes restant à développer :
 
-// existeAdrMailUtilisateur($adrmail) : fournit true si l'adresse mail $adrMail existe dans la table tracegps_utilisateurs, false sinon
+// EN COURS existeAdrMailUtilisateur($adrmail) : fournit true si l'adresse mail $adrMail existe dans la table tracegps_utilisateurs, false sinon
 // getLesUtilisateursAutorises($idUtilisateur) : fournit la collection  des utilisateurs (de niveau 1) autorisés à suivre l'utilisateur $idUtilisateur
 // getLesUtilisateursAutorisant($idUtilisateur) : fournit la collection  des utilisateurs (de niveau 1) autorisant l'utilisateur $idUtilisateur à voir leurs parcours
 // autoriseAConsulter($idAutorisant, $idAutorise) : vérifie que l'utilisateur $idAutorisant) autorise l'utilisateur $idAutorise à consulter ses traces
@@ -344,10 +344,27 @@ class DAO
     
     
     // --------------------------------------------------------------------------------------
-    // début de la zone attribuée au développeur 1 (xxxxxxxxxxxxxxxxxxxx) : lignes 350 à 549
+    // début de la zone attribuée au développeur 1 (Nicolas) : lignes 350 à 549
     // --------------------------------------------------------------------------------------
     
+    public function existeAdrMailUtilisateur($adrmail)
+    {
+        $txt_req = "SELECT adrMail FROM tracegps_vue_utilisateurs WHERE adrMail = 'delasalle.sio.eleves@gmail.com';";
+        $req = $this->cnx->prepare($txt_req);
+        // extraction des données
+        $req->execute();
+        $uneLigne = $req->fetch(PDO::FETCH_OBJ);
+        if($uneLigne != null)
+            return true;
+        else 
+            return false;
+    }
+    
 
+    
+    
+    
+    
     
     
     
@@ -587,6 +604,57 @@ class DAO
         // fourniture de la collection
         return $lesPointsDeTrace;
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     
