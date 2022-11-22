@@ -344,8 +344,21 @@ class DAO
     
     
     // --------------------------------------------------------------------------------------
-    // début de la zone attribuée au développeur 1 (xxxxxxxxxxxxxxxxxxxx) : lignes 350 à 549
+    // début de la zone attribuée au développeur 1 (Nicolas) : lignes 350 à 549
     // --------------------------------------------------------------------------------------
+    
+    public function existeAdrMailUtilisateur($adrmail)
+    {
+        $txt_req = "SELECT adrMail FROM tracegps_vue_utilisateurs WHERE adrMail = 'delasalle.sio.eleves@gmail.com';";
+        $req = $this->cnx->prepare($txt_req);
+        // extraction des données
+        $req->execute();
+        $uneLigne = $req->fetch(PDO::FETCH_OBJ);
+        if($uneLigne != null)
+            return true;
+            else
+                return false;
+    }
     
 
     
