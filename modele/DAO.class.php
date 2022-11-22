@@ -349,19 +349,133 @@ class DAO
     
     public function existeAdrMailUtilisateur($adrmail)
     {
-        $txt_req = "SELECT adrMail FROM tracegps_vue_utilisateurs WHERE adrMail = 'delasalle.sio.eleves@gmail.com';";
+        $txt_req = "SELECT adrMail FROM tracegps_vue_utilisateurs WHERE adrMail = :adrMail LIMIT 1";
         $req = $this->cnx->prepare($txt_req);
+        // liaison de la requête et de ses paramètres
+        $req->bindValue("adrMail", $adrmail, PDO::PARAM_STR);
         // extraction des données
         $req->execute();
         $uneLigne = $req->fetch(PDO::FETCH_OBJ);
-        if($uneLigne != null)
-            return true;
-        else 
+        $req->closeCursor();
+        
+        if ( ! $uneLigne)
             return false;
+        else 
+            return true;
+    }
+    
+    
+    public function getLesUtilisateursAutorisant($idUtilisateur)
+    {
+        // préparation de la requête de recherche
+        $txt_req = "Select id, pseudo, mdpSha1, adrMail, numTel, niveau, dateCreation, nbTraces, dateDerniereTrace";
+        $txt_req .= " from tracegps_vue_utilisateurs";
+        $txt_req .= " where niveau = 1";
+        $txt_req .= "  AND id IN ( SELECT idAutorisant FROM tracegps_autorisations WHERE idAutorise = :idUtilisateur)";
+        $txt_req .= " order by pseudo";
+        
+        $req = $this->cnx->prepare($txt_req);
+        // liaison de la requête et de ses paramètres
+        $req->bindValue("idUtilisateur", $idUtilisateur, PDO::PARAM_STR);
+        // extraction des données
+        $req->execute();
+        $uneLigne = $req->fetch(PDO::FETCH_OBJ);
+        
+        // construction d'une collection d'objets Utilisateur
+        $lesUtilisateurs = array();
+        // tant qu'une ligne est trouvée :
+        while ($uneLigne) {
+            // création d'un objet Utilisateur
+            $unId = utf8_encode($uneLigne->id);
+            $unPseudo = utf8_encode($uneLigne->pseudo);
+            $unMdpSha1 = utf8_encode($uneLigne->mdpSha1);
+            $uneAdrMail = utf8_encode($uneLigne->adrMail);
+            $unNumTel = utf8_encode($uneLigne->numTel);
+            $unNiveau = utf8_encode($uneLigne->niveau);
+            $uneDateCreation = utf8_encode($uneLigne->dateCreation);
+            $unNbTraces = utf8_encode($uneLigne->nbTraces);
+            $uneDateDerniereTrace = utf8_encode($uneLigne->dateDerniereTrace);
+            
+            $unUtilisateur = new Utilisateur($unId, $unPseudo, $unMdpSha1, $uneAdrMail, $unNumTel, $unNiveau, $uneDateCreation, $unNbTraces, $uneDateDerniereTrace);
+            // ajout de l'utilisateur à la collection
+            $lesUtilisateurs[] = $unUtilisateur;
+            // extrait la ligne suivante
+            $uneLigne = $req->fetch(PDO::FETCH_OBJ);
+        }
+        // libère les ressources du jeu de données
+        $req->closeCursor();
+        // fourniture de la collection
+        return $lesUtilisateurs;
+    }
+    
+    
+    
+    
+    
+    public function getLesUtilisateursAutorises($idUtilisateur)
+    {
+        // préparation de la requête de recherche
+        $txt_req = "Select id, pseudo, mdpSha1, adrMail, numTel, niveau, dateCreation, nbTraces, dateDerniereTrace";
+        $txt_req .= " from tracegps_vue_utilisateurs";
+        $txt_req .= " where niveau = 1";
+        $txt_req .= "  AND id IN ( SELECT idAutorise FROM tracegps_autorisations WHERE idAutorisant = :idUtilisateur)";
+        $txt_req .= " order by pseudo";
+        
+        $req = $this->cnx->prepare($txt_req);
+        // liaison de la requête et de ses paramètres
+        $req->bindValue("idUtilisateur", $idUtilisateur, PDO::PARAM_STR);
+        // extraction des données
+        $req->execute();
+        $uneLigne = $req->fetch(PDO::FETCH_OBJ);
+        
+        // construction d'une collection d'objets Utilisateur
+        $lesUtilisateurs = array();
+        // tant qu'une ligne est trouvée :
+        while ($uneLigne) {
+            // création d'un objet Utilisateur
+            $unId = utf8_encode($uneLigne->id);
+            $unPseudo = utf8_encode($uneLigne->pseudo);
+            $unMdpSha1 = utf8_encode($uneLigne->mdpSha1);
+            $uneAdrMail = utf8_encode($uneLigne->adrMail);
+            $unNumTel = utf8_encode($uneLigne->numTel);
+            $unNiveau = utf8_encode($uneLigne->niveau);
+            $uneDateCreation = utf8_encode($uneLigne->dateCreation);
+            $unNbTraces = utf8_encode($uneLigne->nbTraces);
+            $uneDateDerniereTrace = utf8_encode($uneLigne->dateDerniereTrace);
+            
+            $unUtilisateur = new Utilisateur($unId, $unPseudo, $unMdpSha1, $uneAdrMail, $unNumTel, $unNiveau, $uneDateCreation, $unNbTraces, $uneDateDerniereTrace);
+            // ajout de l'utilisateur à la collection
+            $lesUtilisateurs[] = $unUtilisateur;
+            // extrait la ligne suivante
+            $uneLigne = $req->fetch(PDO::FETCH_OBJ);
+        }
+        // libère les ressources du jeu de données
+        $req->closeCursor();
+        // fourniture de la collection
+        return $lesUtilisateurs;
     }
     
 
-    
+    public function autoriseAConsulter($idAutorisant, $idAutorise)
+    {
+        $txt_req = "SELECT idAutorise";
+        $txt_req .= " FROM tracegps_autorisations";
+        $txt_req .= " WHERE idAutorisant = :idAutorisant";
+        $txt_req .= " AND idAutorise = :idAutorise ";
+        $req = $this->cnx->prepare($txt_req);
+        // liaison de la requête et de ses paramètres
+        $req->bindValue("idAutorisant", $idAutorisant, PDO::PARAM_STR);
+        $req->bindValue("idAutorise", $idAutorise, PDO::PARAM_STR);
+        // extraction des données
+        $req->execute();
+        $uneLigne = $req->fetch(PDO::FETCH_OBJ);
+        $req->closeCursor();
+        
+        if ( ! $uneLigne)
+            return false;
+            else
+                return true;
+    }
     
     
     
