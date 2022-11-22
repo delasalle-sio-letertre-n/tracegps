@@ -41,8 +41,6 @@ echo "Existence de l'utilisateur 'delasalle.sio.eleves@gmail.com' : <b>" . $exis
 
 // test de la méthode xxxxxxxxxxxxxxxxxxxxxxxxxxx ----------------------------------------------------------
 // modifié par xxxxxxxxxxxxxxxxx le xxxxxxxxxx
-echo "<h3>Test de Nicolas Le Tertre : </h3>";
-// A CONTINUER .........
 
 
 
