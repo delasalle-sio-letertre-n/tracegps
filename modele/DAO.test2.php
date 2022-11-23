@@ -34,16 +34,41 @@ $dao = new DAO();
 // test de la méthode getLesPointsDeTrace ----------------------------------------------------------
 // modifié par Samuel Givry le 22/11/2022
 echo "<h3>Test de getLesPointsDeTrace : </h3>";
-
-$lesPointsDeTrace = $dao->getLesPointsDeTrace();
-$nbReponses = sizeof($lesPointsDeTrace);
-echo "<p>Nombre de point : " . $nbReponses . "</p>";
+$lesPoints = $dao->getLesPointsDeTrace(1);
+$nbPoints = sizeof($lesPoints);
+echo "<p>Nombre de points de la trace 1 : " . $nbPoints . "</p>";
 // affichage des points
-foreach ($lesPointsDeTrace as $unPointDeTrace)
-{	echo ($unPointDeTrace->toString());
+foreach ($lesPoints as $unPoint)
+{ echo ($unPoint->toString());
 echo ('<br>');
 }
 
+
+// test de la méthode creerUnPointDeTrace ---------------------------------------------------------
+// modifié par dP le 13/8/2021
+echo "<h3>Test de creerUnPointDeTrace : </h3>";
+// on affiche d'abord le nombre de points (5) de la trace 1
+$lesPoints = $dao->getLesPointsDeTrace(1);
+$nbPoints = sizeof($lesPoints);
+echo "<p>Nombre de points de la trace 1 : " . $nbPoints . "</p>";
+// on crée un sixième point et on l'ajoute à la trace 1
+$unIdTrace = 1;
+$unID = 6;
+$uneLatitude = 48.20;
+$uneLongitude = -1.55;
+$uneAltitude = 50;
+$uneDateHeure = date('Y-m-d H:i:s', time());
+$unRythmeCardio = 80;
+$unTempsCumule = 0;
+$uneDistanceCumulee = 0;
+$uneVitesse = 15;
+$unPoint = new PointDeTrace($unIdTrace, $unID, $uneLatitude, $uneLongitude, $uneAltitude, $uneDateHeure, $unRythmeCardio, $unTempsCumule, $uneDistanceCumulee, $uneVitesse);
+$ok = $dao->creerUnPointDeTrace($unPoint);
+// on affiche à nouveau le nombre de points (6) de la trace 1
+$lesPoints = $dao->getLesPointsDeTrace(1);
+$nbPoints = sizeof($lesPoints);
+echo "<p>Nombre de points de la trace 1 : " . $nbPoints . "</p>";
+echo ('<br>');
 
 
 

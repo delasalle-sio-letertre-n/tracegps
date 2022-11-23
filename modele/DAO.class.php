@@ -349,19 +349,133 @@ class DAO
     
     public function existeAdrMailUtilisateur($adrmail)
     {
-        $txt_req = "SELECT adrMail FROM tracegps_vue_utilisateurs WHERE adrMail = 'delasalle.sio.eleves@gmail.com';";
+        $txt_req = "SELECT adrMail FROM tracegps_vue_utilisateurs WHERE adrMail = :adrMail LIMIT 1";
         $req = $this->cnx->prepare($txt_req);
+        // liaison de la requête et de ses paramètres
+        $req->bindValue("adrMail", $adrmail, PDO::PARAM_STR);
         // extraction des données
         $req->execute();
         $uneLigne = $req->fetch(PDO::FETCH_OBJ);
-        if($uneLigne != null)
-            return true;
-        else 
+        $req->closeCursor();
+        
+        if ( ! $uneLigne)
             return false;
+        else 
+            return true;
+    }
+    
+    
+    public function getLesUtilisateursAutorisant($idUtilisateur)
+    {
+        // préparation de la requête de recherche
+        $txt_req = "Select id, pseudo, mdpSha1, adrMail, numTel, niveau, dateCreation, nbTraces, dateDerniereTrace";
+        $txt_req .= " from tracegps_vue_utilisateurs";
+        $txt_req .= " where niveau = 1";
+        $txt_req .= "  AND id IN ( SELECT idAutorisant FROM tracegps_autorisations WHERE idAutorise = :idUtilisateur)";
+        $txt_req .= " order by pseudo";
+        
+        $req = $this->cnx->prepare($txt_req);
+        // liaison de la requête et de ses paramètres
+        $req->bindValue("idUtilisateur", $idUtilisateur, PDO::PARAM_STR);
+        // extraction des données
+        $req->execute();
+        $uneLigne = $req->fetch(PDO::FETCH_OBJ);
+        
+        // construction d'une collection d'objets Utilisateur
+        $lesUtilisateurs = array();
+        // tant qu'une ligne est trouvée :
+        while ($uneLigne) {
+            // création d'un objet Utilisateur
+            $unId = utf8_encode($uneLigne->id);
+            $unPseudo = utf8_encode($uneLigne->pseudo);
+            $unMdpSha1 = utf8_encode($uneLigne->mdpSha1);
+            $uneAdrMail = utf8_encode($uneLigne->adrMail);
+            $unNumTel = utf8_encode($uneLigne->numTel);
+            $unNiveau = utf8_encode($uneLigne->niveau);
+            $uneDateCreation = utf8_encode($uneLigne->dateCreation);
+            $unNbTraces = utf8_encode($uneLigne->nbTraces);
+            $uneDateDerniereTrace = utf8_encode($uneLigne->dateDerniereTrace);
+            
+            $unUtilisateur = new Utilisateur($unId, $unPseudo, $unMdpSha1, $uneAdrMail, $unNumTel, $unNiveau, $uneDateCreation, $unNbTraces, $uneDateDerniereTrace);
+            // ajout de l'utilisateur à la collection
+            $lesUtilisateurs[] = $unUtilisateur;
+            // extrait la ligne suivante
+            $uneLigne = $req->fetch(PDO::FETCH_OBJ);
+        }
+        // libère les ressources du jeu de données
+        $req->closeCursor();
+        // fourniture de la collection
+        return $lesUtilisateurs;
+    }
+    
+    
+    
+    
+    
+    public function getLesUtilisateursAutorises($idUtilisateur)
+    {
+        // préparation de la requête de recherche
+        $txt_req = "Select id, pseudo, mdpSha1, adrMail, numTel, niveau, dateCreation, nbTraces, dateDerniereTrace";
+        $txt_req .= " from tracegps_vue_utilisateurs";
+        $txt_req .= " where niveau = 1";
+        $txt_req .= "  AND id IN ( SELECT idAutorise FROM tracegps_autorisations WHERE idAutorisant = :idUtilisateur)";
+        $txt_req .= " order by pseudo";
+        
+        $req = $this->cnx->prepare($txt_req);
+        // liaison de la requête et de ses paramètres
+        $req->bindValue("idUtilisateur", $idUtilisateur, PDO::PARAM_STR);
+        // extraction des données
+        $req->execute();
+        $uneLigne = $req->fetch(PDO::FETCH_OBJ);
+        
+        // construction d'une collection d'objets Utilisateur
+        $lesUtilisateurs = array();
+        // tant qu'une ligne est trouvée :
+        while ($uneLigne) {
+            // création d'un objet Utilisateur
+            $unId = utf8_encode($uneLigne->id);
+            $unPseudo = utf8_encode($uneLigne->pseudo);
+            $unMdpSha1 = utf8_encode($uneLigne->mdpSha1);
+            $uneAdrMail = utf8_encode($uneLigne->adrMail);
+            $unNumTel = utf8_encode($uneLigne->numTel);
+            $unNiveau = utf8_encode($uneLigne->niveau);
+            $uneDateCreation = utf8_encode($uneLigne->dateCreation);
+            $unNbTraces = utf8_encode($uneLigne->nbTraces);
+            $uneDateDerniereTrace = utf8_encode($uneLigne->dateDerniereTrace);
+            
+            $unUtilisateur = new Utilisateur($unId, $unPseudo, $unMdpSha1, $uneAdrMail, $unNumTel, $unNiveau, $uneDateCreation, $unNbTraces, $uneDateDerniereTrace);
+            // ajout de l'utilisateur à la collection
+            $lesUtilisateurs[] = $unUtilisateur;
+            // extrait la ligne suivante
+            $uneLigne = $req->fetch(PDO::FETCH_OBJ);
+        }
+        // libère les ressources du jeu de données
+        $req->closeCursor();
+        // fourniture de la collection
+        return $lesUtilisateurs;
     }
     
 
-    
+    public function autoriseAConsulter($idAutorisant, $idAutorise)
+    {
+        $txt_req = "SELECT idAutorise";
+        $txt_req .= " FROM tracegps_autorisations";
+        $txt_req .= " WHERE idAutorisant = :idAutorisant";
+        $txt_req .= " AND idAutorise = :idAutorise ";
+        $req = $this->cnx->prepare($txt_req);
+        // liaison de la requête et de ses paramètres
+        $req->bindValue("idAutorisant", $idAutorisant, PDO::PARAM_STR);
+        $req->bindValue("idAutorise", $idAutorise, PDO::PARAM_STR);
+        // extraction des données
+        $req->execute();
+        $uneLigne = $req->fetch(PDO::FETCH_OBJ);
+        $req->closeCursor();
+        
+        if ( ! $uneLigne)
+            return false;
+            else
+                return true;
+    }
     
     
     
@@ -565,45 +679,87 @@ class DAO
     // --------------------------------------------------------------------------------------
     
     // getLesPointsDeTrace($idTrace) : fournit la collection des points de la trace $idTrace
-    
     // fournit la collection  de tous les points de trace (de $idTrace)
     // le résultat est fourni sous forme d'une collection d'objets Utilisateur
     
     
-    public function getLesPointsDeTrace() {
+    public function getLesPointsDeTrace($idTrace) {
         // préparation de la requête de recherche
-        $txt_req = "Select idTrace, id, dateHeure, rythmeCardio, tempsCumule, distanceCumulee, vitesse";
-        $txt_req .= " from tracegps_vue_traces";
-        
+        $txt_req = "Select idTrace, id, latitude, longitude, altitude, dateHeure, rythmeCardio";
+        $txt_req .= " from tracegps_points";
+        $txt_req .= " where idTrace = $idTrace";
+           
         $req = $this->cnx->prepare($txt_req);
         // extraction des données
         $req->execute();
         $uneLigne = $req->fetch(PDO::FETCH_OBJ);
         
-        // construction d'une collection d'objets lesPointDetrace
-        $lesPointsDeTrace = array();
+        // construction d'une collection d'objets lesPoints
+        $lesPoints = array();
         // tant qu'une ligne est trouvée :
         while ($uneLigne) {
             // création d'un objet PointDeTrace
-            $unIdtrace = utf8_encode($uneLigne->idTrace);
+            $unIdTrace = utf8_encode($uneLigne->idTrace);
             $unId = utf8_encode($uneLigne->id);
+            $uneLatitude = utf8_encode($uneLigne->latitude);
+            $uneLongitude = utf8_encode($uneLigne->longitude);
+            $uneAltitude = utf8_encode($uneLigne->altitude);
             $uneDateHeure = utf8_encode($uneLigne->dateHeure);
             $unRythmeCardio = utf8_encode($uneLigne->rythmeCardio);
-            $unTempsCumule = utf8_encode($uneLigne->tempsCumule);
-            $uneDistanceCumulee = utf8_encode($uneLigne->distanceCumulee);
-            $uneVitesse = utf8_encode($uneLigne->vitesse);
             
-            $unPointDeTrace = new PointDeTrace($unIdtrace, $unId, $uneDateHeure, $unRythmeCardio, $unTempsCumule, $uneDistanceCumulee, $uneVitesse);
-            // ajout du pointDeTrace à la collection
-            $lesPointsDeTrace[] = $unPointDeTrace;
+            $unPoint = new PointDeTrace($unIdTrace, $unId, $uneLatitude, $uneLongitude, $uneAltitude, $uneDateHeure, $unRythmeCardio, 0, 0, 0);
+            // ajout du point à la collection
+            $lesPoints[] = $unPoint;
             // extrait la ligne suivante
             $uneLigne = $req->fetch(PDO::FETCH_OBJ);
         }
         // libère les ressources du jeu de données
         $req->closeCursor();
         // fourniture de la collection
-        return $lesPointsDeTrace;
+        return $lesPoints;
     }
+    
+    
+    // creerUnPointDeTrace(PointDeTrace $unPointDeTrace) : enregistre le point $unPointDeTrace dans la bdd
+
+    // enregistre le point $unPointDetrace dans la bdd
+    // fournit true si l'enregistrement s'est bien effectué, false sinon
+    // met à jour l'objet $unPointDetrace avec l'id (auto_increment) attribué par le SGBD
+        
+        
+    public function creerUnPointDeTrace(PointDeTrace $unPointDeTrace) {
+            
+            // préparation de la requête
+            $txt_req1 = "insert into tracegps_points (idTrace, , id, latitude, longitude, dateHeure)";
+            $txt_req1 .= " values (:pseudo, :idTrace, :id, :latitude, :longitude, :dateHeure)";
+            $req1 = $this->cnx->prepare($txt_req1);
+            // liaison de la requête et de ses paramètres
+            $req1->bindValue("idTrace", utf8_decode($unPointDeTrace->getIdTrace()), PDO::PARAM_STR);
+            $req1->bindValue("id", utf8_decode($unPointDeTrace->getId()), PDO::PARAM_STR);
+            $req1->bindValue("latitude", utf8_decode($unPointDeTrace->getLatitude()), PDO::PARAM_STR);
+            $req1->bindValue("longitude", utf8_decode($unPointDeTrace->getLongitude()), PDO::PARAM_STR);
+            $req1->bindValue("dateHeure", utf8_decode($unPointDeTrace->getDateHeure()), PDO::PARAM_INT);
+            // exécution de la requête
+            $ok = $req1->execute();
+            // sortir en cas d'échec
+            if ( ! $ok) { return false; }
+            
+            // recherche de l'identifiant (auto_increment) qui a été attribué à la trace
+            $unId = $this->cnx->lastInsertId();
+            $unPointDeTrace->setId($unId);
+            return true;
+        }
+        
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     
