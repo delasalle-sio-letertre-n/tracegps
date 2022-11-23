@@ -939,8 +939,37 @@ class DAO
         $unId = $this->cnx->lastInsertId();
         $uneTrace->setId($unId);
         return true;
-        }
+    }   
     
+    public function supprimerUneTrace($idTrace) {
+        $uneTrace = $this->getUneTrace($idTrace);
+        if ($uneTrace == null) {
+            return false;
+        }
+        else {
+            $idTrace = $uneTrace->getId();
+            
+            // suppression des traces de l'utilisateur (et des points correspondants)
+            $lesTraces = $this->getLesTraces($idTrace);
+            foreach ($lesTraces as $uneTrace) {
+                $this->supprimerUneTrace($uneTrace->getId());
+            }
+            
+            // préparation de la requête de suppression des autorisations
+            $txt_req1 = "delete from tracegps_traces" ;
+            $txt_req1 .= " where id = :idTrace";
+            $req1 = $this->cnx->prepare($txt_req1);
+            // liaison de la requête et de ses paramètres
+            $req1->bindValue("idTrace", utf8_decode($idTrace), PDO::PARAM_INT);
+            // exécution de la requête
+            $ok = $req1->execute();
+            
+            return $ok;
+        }
+    }
+    
+        
+  
     
     
     

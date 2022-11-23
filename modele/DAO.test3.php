@@ -49,7 +49,7 @@ echo "<p>Nombre de traces autorisées à l'utilisateur 3 : " . $nbReponses . "</
 foreach ($lesTraces as $uneTrace)
 { echo ($uneTrace->toString());
 echo ('<br>');
-}*/
+}
 
 // test de la méthode creerUneTrace ----------------------------------------------------------
 // modifié par Jimmy Le Goff le 22/11/2022
@@ -72,8 +72,8 @@ if ($ok) {
 else {
     echo "<p>Echec lors de l'enregistrement de la trace !</p>";
 }
+*/
 
-/*
 // test de la méthode supprimerUneTrace -----------------------------------------------------------
 // modifié par Jimmy Le Goff le 22/11/2022
 echo "<h3>Test de supprimerUneTrace : </h3>";
@@ -84,7 +84,7 @@ if ($ok) {
 else {
     echo "<p>Echec lors de la suppression de la trace !</p>";
 }
-
+/*
 
 // test des méthodes creerUnPointDeTrace et terminerUneTrace --------------------------------------
 // modifié par Jimmy Le Goff le 22/11/2022
