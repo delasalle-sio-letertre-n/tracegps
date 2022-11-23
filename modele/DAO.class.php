@@ -725,31 +725,82 @@ class DAO
     // enregistre le point $unPointDetrace dans la bdd
     // fournit true si l'enregistrement s'est bien effectué, false sinon
     // met à jour l'objet $unPointDetrace avec l'id (auto_increment) attribué par le SGBD
+    public function creerUnPointDeTrace($unPointDeTrace) {    
+        // préparation de la requête
+        $txt_req1 = "insert into tracegps_points (idTrace, id, latitude, longitude, altitude, dateHeure, rythmeCardio)";
+        $txt_req1 .= " values (:idTrace, :id, :latitude, :longitude, :altitude, :dateHeure, :rythmeCardio)";
+        $req1 = $this->cnx->prepare($txt_req1);
+        // liaison de la requête et de ses paramètres
+        $req1->bindValue("idTrace", utf8_decode($unPointDeTrace->getIdTrace()), PDO::PARAM_STR);
+        $req1->bindValue("id", utf8_decode($unPointDeTrace->getId()), PDO::PARAM_STR);
+        $req1->bindValue("latitude", utf8_decode($unPointDeTrace->getLatitude()), PDO::PARAM_STR);
+        $req1->bindValue("longitude", utf8_decode($unPointDeTrace->getLongitude()), PDO::PARAM_STR);
+        $req1->bindValue("altitude", utf8_decode($unPointDeTrace->getAltitude()), PDO::PARAM_INT);
+        $req1->bindValue("dateHeure", utf8_decode($unPointDeTrace->getDateHeure()), PDO::PARAM_STR);
+        $req1->bindValue("rythmeCardio", utf8_decode($unPointDeTrace->getRythmeCardio()), PDO::PARAM_STR);
+        // exécution de la requête
+        $ok = $req1->execute();
+        // sortir en cas d'échec
+        if ( ! $ok) { return false; }
         
+        // recherche de l'identifiant (auto_increment) qui a été attribué à la trace
+        $unID = $this->cnx->lastInsertId();
+        $unPointDeTrace->setId($unID);
+        return true;
+    }
+    
+    
+    
+    // getUneTrace($idTrace) : fournit un objet Trace à partir de identifiant $idTrace
+    
+  
+    // fournit la trace correspondant a $idTrace
+
+    public function getUneTrace($idTrace) {
+        // préparation de la requête de recherche
+        $txt_req = "Select id, dateDebut, dateFin, terminee, idUtilisateur";
+        $txt_req .= " from tracegps_traces";
+        $txt_req .= " where id = $idTrace";
         
-    public function creerUnPointDeTrace(PointDeTrace $unPointDeTrace) {
-            
-            // préparation de la requête
-            $txt_req1 = "insert into tracegps_points (idTrace, , id, latitude, longitude, dateHeure)";
-            $txt_req1 .= " values (:pseudo, :idTrace, :id, :latitude, :longitude, :dateHeure)";
-            $req1 = $this->cnx->prepare($txt_req1);
-            // liaison de la requête et de ses paramètres
-            $req1->bindValue("idTrace", utf8_decode($unPointDeTrace->getIdTrace()), PDO::PARAM_STR);
-            $req1->bindValue("id", utf8_decode($unPointDeTrace->getId()), PDO::PARAM_STR);
-            $req1->bindValue("latitude", utf8_decode($unPointDeTrace->getLatitude()), PDO::PARAM_STR);
-            $req1->bindValue("longitude", utf8_decode($unPointDeTrace->getLongitude()), PDO::PARAM_STR);
-            $req1->bindValue("dateHeure", utf8_decode($unPointDeTrace->getDateHeure()), PDO::PARAM_INT);
-            // exécution de la requête
-            $ok = $req1->execute();
-            // sortir en cas d'échec
-            if ( ! $ok) { return false; }
-            
-            // recherche de l'identifiant (auto_increment) qui a été attribué à la trace
-            $unId = $this->cnx->lastInsertId();
-            $unPointDeTrace->setId($unId);
-            return true;
+        $req = $this->cnx->prepare($txt_req);
+        
+        if ($idTrace == null) {
+            return "Ratio";
         }
         
+        else {
+        
+        // extraction des données
+        $req->execute();
+        $uneLigne = $req->fetch(PDO::FETCH_OBJ);
+
+        {
+            // création d'un objet Trace
+            $unId = utf8_encode($uneLigne->id);
+            $uneDateDebut = utf8_encode($uneLigne->dateDebut);
+            $uneDateFin = utf8_encode($uneLigne->dateFin);
+            $terminee = utf8_encode($uneLigne->terminee);
+            $unIdUtilisateur = utf8_encode($uneLigne->idUtilisateur);
+            //$unNombrePoint = $this->getNombrePoints($id);
+
+            
+            $uneTrace = new Trace($unId, $uneDateDebut, $uneDateFin, $terminee, $unIdUtilisateur  );
+        }
+        // libère les ressources du jeu de données
+        $req->closeCursor();
+        
+        return $uneTrace;
+        }
+    }
+    
+    
+        
+
+            
+        
+
+        
+   
 
     
     
