@@ -942,19 +942,7 @@ class DAO
     }   
     
     public function supprimerUneTrace($idTrace) {
-        $uneTrace = $this->getUneTrace($idTrace);
-        if ($uneTrace == null) {
-            return false;
-        }
-        else {
-            $idTrace = $uneTrace->getId();
-            
-            // suppression des traces de l'utilisateur (et des points correspondants)
-            $lesTraces = $this->getLesTraces($idTrace);
-            foreach ($lesTraces as $uneTrace) {
-                $this->supprimerUneTrace($uneTrace->getId());
-            }
-            
+           
             // préparation de la requête de suppression des autorisations
             $txt_req1 = "delete from tracegps_traces" ;
             $txt_req1 .= " where id = :idTrace";
@@ -965,8 +953,10 @@ class DAO
             $ok = $req1->execute();
             
             return $ok;
-        }
+        
     }
+    
+    
     
         
   
