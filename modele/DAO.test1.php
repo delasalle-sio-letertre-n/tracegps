@@ -95,6 +95,17 @@ if ($dao->supprimerUneAutorisation(2, 1)) $ok = "oui"; else $ok = "non";
 echo "<p>La suppression de l'autorisation de l'utilisateur 2 vers l'utilisateur 1 a réussi : <b>" . $ok . "</b><br>";
 
 
+// test de la méthode getToutesLesTraces ----------------------------------------------------------
+// modifié par dP le 14/8/2021
+echo "<h3>Test de getToutesLesTraces : </h3>";
+$lesTraces = $dao->getToutesLesTraces();
+$nbReponses = sizeof($lesTraces);
+echo "<p>Nombre de traces : " . $nbReponses . "</p>";
+// affichage des traces
+foreach ($lesTraces as $uneTrace)
+{ echo ($uneTrace->toString());
+echo ('<br>');
+}
 
 
 

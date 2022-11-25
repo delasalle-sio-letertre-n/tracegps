@@ -479,52 +479,89 @@ class DAO
     
     public function creerUneAutorisation($idAutorisant, $idAutorise)
     {
-        $txt_req = "INSERT INTO tracegps_autorisations";
-        $txt_req .= " VALUES(:idAutorisant, :idAutorise)";
-        $req = $this->cnx->prepare($txt_req);
-        
-        // liaison de la requête et de ses paramètres
-        $req->bindValue("idAutorisant", $idAutorisant, PDO::PARAM_STR);
-        $req->bindValue("idAutorise", $idAutorise, PDO::PARAM_STR);
-        // extraction des données
-        $req->execute();
-        $req->closeCursor();
-        
-        
-        
-        if ( ! DAO::autoriseAConsulter($idAutorisant, $idAutorise))
+        if ( DAO::autoriseAConsulter($idAutorisant, $idAutorise))
             return false;
-            else
-                return true;
+        else
+        
+        {
+            $txt_req = "INSERT INTO tracegps_autorisations";
+            $txt_req .= " VALUES(:idAutorisant, :idAutorise)";
+            $req = $this->cnx->prepare($txt_req);
+            
+            // liaison de la requête et de ses paramètres
+            $req->bindValue("idAutorisant", $idAutorisant, PDO::PARAM_STR);
+            $req->bindValue("idAutorise", $idAutorise, PDO::PARAM_STR);
+            // extraction des données
+            $req->execute();
+            $req->closeCursor();
+            
+            return true;
+        }
     }
     
     
-    
+
+
     public function supprimerUneAutorisation($idAutorisant, $idAutorise)
     
     {
-        $txt_req = "DELETE FROM tracegps_autorisations";
-        $txt_req .= " WHERE idAutorisant = :idAutorisant AND idAutorise = :idAutorise)";
-        $req = $this->cnx->prepare($txt_req);
-        
-        // liaison de la requête et de ses paramètres
-        $req->bindValue("idAutorisant", $idAutorisant, PDO::PARAM_STR);
-        $req->bindValue("idAutorise", $idAutorise, PDO::PARAM_STR);
-        // extraction des données
-        $req->execute();
-        $req->closeCursor();
-        
-        
-        
         if ( DAO::autoriseAConsulter($idAutorisant, $idAutorise))
-            return false;
-            else
-                return true;
+        {
+            $txt_req = "DELETE FROM tracegps_autorisations";
+            $txt_req .= " WHERE idAutorisant = :idAutorisant AND idAutorise = :idAutorise";
+            
+            $req = $this->cnx->prepare($txt_req);
+            
+            // liaison de la requête et de ses paramètres
+            $req->bindValue("idAutorisant", $idAutorisant, PDO::PARAM_STR);
+            $req->bindValue("idAutorise", $idAutorise, PDO::PARAM_STR);
+            // extraction des données
+            $req->execute();
+            $req->closeCursor();
+            
+            return true;
+        }
+        else return false;
     }
     
     
     
-    
+    public function getToutesLesTraces() {
+        // préparation de la requête de recherche
+        $txt_req = "Select id, dateDebut, dateFin, terminee, idUtilisateur";
+        $txt_req .= " from tracegps_traces";
+        
+        $req = $this->cnx->prepare($txt_req);
+        
+        
+        
+        // extraction des données
+        $req->execute();
+        $uneLigne = $req->fetch(PDO::FETCH_OBJ);
+        
+        
+        // création d'un objet Trace
+        $unId = utf8_encode($uneLigne->id);
+        $uneDateDebut = utf8_encode($uneLigne->dateDebut);
+        $uneDateFin = utf8_encode($uneLigne->dateFin);
+        $terminee = utf8_encode($uneLigne->terminee);
+        $unIdUtilisateur = utf8_encode($uneLigne->idUtilisateur);
+        
+        $uneTrace = new Trace($unId, $uneDateDebut, $uneDateFin, $terminee, $unIdUtilisateur);
+        
+        // libère les ressources du jeu de données
+        $req->closeCursor();
+        
+        $lesPointsDeTrace = DAO::getLesPointsDeTrace($idTrace);
+        
+        foreach ($lesPointsDeTrace as $unPoint)
+        {
+            $uneTrace->ajouterPoint($unPoint);
+        }
+        
+        return $uneTrace;
+        
+    }
     
     
     
@@ -793,12 +830,17 @@ class DAO
     }
     
     
-    
+        
+
+            
+        
+
+        
     // getUneTrace($idTrace) : fournit un objet Trace à partir de identifiant $idTrace
     
-  
+    
     // fournit la trace correspondant a $idTrace
-
+    
     public function getUneTrace($idTrace) {
         // préparation de la requête de recherche
         $txt_req = "Select id, dateDebut, dateFin, terminee, idUtilisateur";
@@ -807,40 +849,37 @@ class DAO
         
         $req = $this->cnx->prepare($txt_req);
         
-     
+        
         
         // extraction des données
         $req->execute();
         $uneLigne = $req->fetch(PDO::FETCH_OBJ);
         
-        {
-            // création d'un objet Trace
-            $unId = utf8_encode($uneLigne->id);
-            $uneDateDebut = utf8_encode($uneLigne->dateDebut);
-            $uneDateFin = utf8_encode($uneLigne->dateFin);
-            $terminee = utf8_encode($uneLigne->terminee);
-            $unIdUtilisateur = utf8_encode($uneLigne->idUtilisateur);
-
+        
+        // création d'un objet Trace
+        $unId = utf8_encode($uneLigne->id);
+        $uneDateDebut = utf8_encode($uneLigne->dateDebut);
+        $uneDateFin = utf8_encode($uneLigne->dateFin);
+        $terminee = utf8_encode($uneLigne->terminee);
+        $unIdUtilisateur = utf8_encode($uneLigne->idUtilisateur);
             
-
-            
-            $uneTrace = new Trace($unId, $uneDateDebut, $uneDateFin, $terminee, $unIdUtilisateur);
-        }
+        $uneTrace = new Trace($unId, $uneDateDebut, $uneDateFin, $terminee, $unIdUtilisateur);
+        
         // libère les ressources du jeu de données
         $req->closeCursor();
+        
+        $lesPointsDeTrace = DAO::getLesPointsDeTrace($idTrace);
+        
+        foreach ($lesPointsDeTrace as $unPoint)
+        {
+            $uneTrace->ajouterPoint($unPoint);
+        }
         
         return $uneTrace;
         
     }
     
     
-        
-
-            
-        
-
-        
-   
 
     
     
