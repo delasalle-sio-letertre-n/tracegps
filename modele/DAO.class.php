@@ -764,16 +764,12 @@ class DAO
         
         $req = $this->cnx->prepare($txt_req);
         
-        if ($idTrace == null) {
-            return "Ratio";
-        }
-        
-        else {
+     
         
         // extraction des données
         $req->execute();
         $uneLigne = $req->fetch(PDO::FETCH_OBJ);
-
+        
         {
             // création d'un objet Trace
             $unId = utf8_encode($uneLigne->id);
@@ -781,16 +777,17 @@ class DAO
             $uneDateFin = utf8_encode($uneLigne->dateFin);
             $terminee = utf8_encode($uneLigne->terminee);
             $unIdUtilisateur = utf8_encode($uneLigne->idUtilisateur);
-            //$unNombrePoint = $this->getNombrePoints($id);
 
             
-            $uneTrace = new Trace($unId, $uneDateDebut, $uneDateFin, $terminee, $unIdUtilisateur  );
+
+            
+            $uneTrace = new Trace($unId, $uneDateDebut, $uneDateFin, $terminee, $unIdUtilisateur);
         }
         // libère les ressources du jeu de données
         $req->closeCursor();
         
         return $uneTrace;
-        }
+        
     }
     
     
