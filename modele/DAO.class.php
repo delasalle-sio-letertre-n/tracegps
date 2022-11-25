@@ -961,8 +961,48 @@ class DAO
     // --------------------------------------------------------------------------------------
     // début de la zone attribuée au développeur 3 (Jimmy LE GOFF) lignes 750 à 949
     // --------------------------------------------------------------------------------------
+    public function creerUneTrace($uneTrace)
+        {
+        // préparation de la requête
+        $txt_req1 = "insert into tracegps_traces (id, dateDebut, dateFin, terminee, idUtilisateur)";
+        $txt_req1 .= " values (:id, :dateDebut, :dateFin, :terminee, :idUtilisateur)";
+        $req1 = $this->cnx->prepare($txt_req1);
+        // liaison de la requête et de ses paramètres
+        $req1->bindValue("id", utf8_decode($uneTrace->getid()), PDO::PARAM_STR);
+        $req1->bindValue("dateDebut", utf8_decode($uneTrace->getdateFin()), PDO::PARAM_STR);
+        $req1->bindValue("dateFin", utf8_decode($uneTrace->getdateFin()), PDO::PARAM_STR);
+        $req1->bindValue("terminee", utf8_decode($uneTrace->getterminee()), PDO::PARAM_INT);
+        $req1->bindValue("idUtilisateur",utf8_decode($uneTrace->getdateDebut()), PDO::PARAM_STR);
+        // exécution de la requête
+        $ok = $req1->execute();
+        // sortir en cas d'échec
+        if ( ! $ok) { return false; }
+            
+        // recherche de l'identifiant (auto_increment) qui a été attribué à la trace
+        $unId = $this->cnx->lastInsertId();
+        $uneTrace->setId($unId);
+        return true;
+    }   
+    
+    public function supprimerUneTrace($idTrace) {
+           
+            // préparation de la requête de suppression des autorisations
+            $txt_req1 = "delete from tracegps_traces" ;
+            $txt_req1 .= " where id = :idTrace";
+            $req1 = $this->cnx->prepare($txt_req1);
+            // liaison de la requête et de ses paramètres
+            $req1->bindValue("idTrace", utf8_decode($idTrace), PDO::PARAM_INT);
+            // exécution de la requête
+            $ok = $req1->execute();
+            
+            return $ok;
+        
+    }
     
     
+    
+        
+  
     
     
     
