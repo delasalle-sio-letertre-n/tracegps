@@ -527,40 +527,37 @@ class DAO
     
     
     public function getToutesLesTraces() {
+
+        $toutesLesTraces = array();
+        $tousLesIdDeTraces = array();
+        
         // préparation de la requête de recherche
-        $txt_req = "Select id, dateDebut, dateFin, terminee, idUtilisateur";
+        $txt_req = "Select id";
         $txt_req .= " from tracegps_traces";
         
         $req = $this->cnx->prepare($txt_req);
-        
-        
         
         // extraction des données
         $req->execute();
         $uneLigne = $req->fetch(PDO::FETCH_OBJ);
         
         
-        // création d'un objet Trace
-        $unId = utf8_encode($uneLigne->id);
-        $uneDateDebut = utf8_encode($uneLigne->dateDebut);
-        $uneDateFin = utf8_encode($uneLigne->dateFin);
-        $terminee = utf8_encode($uneLigne->terminee);
-        $unIdUtilisateur = utf8_encode($uneLigne->idUtilisateur);
-        
-        $uneTrace = new Trace($unId, $uneDateDebut, $uneDateFin, $terminee, $unIdUtilisateur);
-        
-        // libère les ressources du jeu de données
-        $req->closeCursor();
-        
-        $lesPointsDeTrace = DAO::getLesPointsDeTrace($idTrace);
-        
-        foreach ($lesPointsDeTrace as $unPoint)
-        {
-            $uneTrace->ajouterPoint($unPoint);
+        while ($uneLigne) {
+            // ajout de l'id de la trace à la collection
+            $unIdTrace = utf8_encode($uneLigne->id);
+            // extrait la ligne suivante
+            $tousLesIdDeTraces[] = $unIdTrace;
+            $uneLigne = $req->fetch(PDO::FETCH_OBJ);
         }
         
-        return $uneTrace;
+        $req->closeCursor();
         
+        foreach ($tousLesIdDeTraces as $idTrace)
+        {
+            $toutesLesTraces[] = DAO::getUneTrace($idTrace);
+        }
+
+        return $toutesLesTraces;
     }
     
     
