@@ -477,7 +477,50 @@ class DAO
                 return true;
     }
     
+    public function creerUneAutorisation($idAutorisant, $idAutorise)
+    {
+        $txt_req = "INSERT INTO tracegps_autorisations";
+        $txt_req .= " VALUES(:idAutorisant, :idAutorise)";
+        $req = $this->cnx->prepare($txt_req);
+        
+        // liaison de la requête et de ses paramètres
+        $req->bindValue("idAutorisant", $idAutorisant, PDO::PARAM_STR);
+        $req->bindValue("idAutorise", $idAutorise, PDO::PARAM_STR);
+        // extraction des données
+        $req->execute();
+        $req->closeCursor();
+        
+        
+        
+        if ( ! DAO::autoriseAConsulter($idAutorisant, $idAutorise))
+            return false;
+            else
+                return true;
+    }
     
+    
+    
+    public function supprimerUneAutorisation($idAutorisant, $idAutorise)
+    
+    {
+        $txt_req = "DELETE FROM tracegps_autorisations";
+        $txt_req .= " WHERE idAutorisant = :idAutorisant AND idAutorise = :idAutorise)";
+        $req = $this->cnx->prepare($txt_req);
+        
+        // liaison de la requête et de ses paramètres
+        $req->bindValue("idAutorisant", $idAutorisant, PDO::PARAM_STR);
+        $req->bindValue("idAutorise", $idAutorise, PDO::PARAM_STR);
+        // extraction des données
+        $req->execute();
+        $req->closeCursor();
+        
+        
+        
+        if ( DAO::autoriseAConsulter($idAutorisant, $idAutorise))
+            return false;
+            else
+                return true;
+    }
     
     
     
