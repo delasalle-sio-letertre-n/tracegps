@@ -854,28 +854,34 @@ class DAO
         // extraction des données
         $req->execute();
         $uneLigne = $req->fetch(PDO::FETCH_OBJ);
-        
-        
-        // création d'un objet Trace
-        $unId = utf8_encode($uneLigne->id);
-        $uneDateDebut = utf8_encode($uneLigne->dateDebut);
-        $uneDateFin = utf8_encode($uneLigne->dateFin);
-        $terminee = utf8_encode($uneLigne->terminee);
-        $unIdUtilisateur = utf8_encode($uneLigne->idUtilisateur);
-            
-        $uneTrace = new Trace($unId, $uneDateDebut, $uneDateFin, $terminee, $unIdUtilisateur);
-        
-        // libère les ressources du jeu de données
         $req->closeCursor();
         
-        $lesPointsDeTrace = DAO::getLesPointsDeTrace($idTrace);
-        
-        foreach ($lesPointsDeTrace as $unPoint)
-        {
-            $uneTrace->ajouterPoint($unPoint);
+        // traitement de la réponse
+        if ( ! $uneLigne) {
+            return null;
         }
+        else {
+            // création d'un objet Trace
+            $unId = utf8_encode($uneLigne->id);
+            $uneDateDebut = utf8_encode($uneLigne->dateDebut);
+            $uneDateFin = utf8_encode($uneLigne->dateFin);
+            $terminee = utf8_encode($uneLigne->terminee);
+            $unIdUtilisateur = utf8_encode($uneLigne->idUtilisateur);
+            
+            $uneTrace = new Trace($unId, $uneDateDebut, $uneDateFin, $terminee, $unIdUtilisateur);
         
-        return $uneTrace;
+            // libère les ressources du jeu de données
+        
+        
+            $lesPointsDeTrace = DAO::getLesPointsDeTrace($idTrace);
+        
+            foreach ($lesPointsDeTrace as $unPoint)
+            {
+                $uneTrace->ajouterPoint($unPoint);
+            }
+        
+            return $uneTrace;
+        }
         
     }
     
