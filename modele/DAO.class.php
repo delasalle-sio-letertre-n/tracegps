@@ -562,7 +562,46 @@ class DAO
     
     
     
-    
+    public function getLesTracesAutorisees($idUtilisateur) {
+        
+        $toutesLesTraces = array();
+        $tousLesIdDeTraces = array();
+        
+        // préparation de la requête de recherche
+        $txt_req = "Select DISTINCT id";
+        $txt_req .= " from tracegps_traces";
+        $txt_req .= " INNER JOIN tracegps_autorisations ON tracegps_autorisations.idAutorisant = idUtilisateur";
+        $txt_req .= " where tracegps_autorisations.idAutorise = :idUtilisateur OR idUtilisateur = :idUtilisateur";
+        
+        
+        
+        
+        $req = $this->cnx->prepare($txt_req);
+        
+        $req->bindValue("idUtilisateur", utf8_decode($idUtilisateur), PDO::PARAM_STR);
+        
+        // extraction des données
+        $req->execute();
+        $uneLigne = $req->fetch(PDO::FETCH_OBJ);
+        
+        
+        while ($uneLigne) {
+            // ajout de l'id de la trace à la collection
+            $unIdTrace = utf8_encode($uneLigne->id);
+            // extrait la ligne suivante
+            $tousLesIdDeTraces[] = $unIdTrace;
+            $uneLigne = $req->fetch(PDO::FETCH_OBJ);
+        }
+        
+        $req->closeCursor();
+        
+        foreach ($tousLesIdDeTraces as $idTrace)
+        {
+            $toutesLesTraces[] = DAO::getUneTrace($idTrace);
+        }
+        
+        return $toutesLesTraces;
+    }
     
     
     
@@ -1164,7 +1203,7 @@ class DAO
         }
         
         $txt_req2 = "update tracegps_traces";
-        $txt_req2 .= " SET dateFin = :dateFin, terminee = 1)";
+        $txt_req2 .= " SET dateFin = :dateFin, terminee = 1";
         $txt_req2 .= " WHERE id = :idTrace";
         
         $req2 = $this->cnx->prepare($txt_req2);

@@ -127,9 +127,9 @@ foreach ($lesTraces as $uneTrace)
 { echo ($uneTrace->toString());
 echo ('<br>');
 }
-$lesTraces = $dao->getLesTracesAutorisees(3);
+$lesTraces = $dao->getLesTracesAutorisees(9);
 $nbReponses = sizeof($lesTraces);
-echo "<p>Nombre de traces autorisées à l'utilisateur 3 : " . $nbReponses . "</p>";
+echo "<p>Nombre de traces autorisées à l'utilisateur 9 : " . $nbReponses . "</p>";
 // affichage des traces
 foreach ($lesTraces as $uneTrace)
 { echo ($uneTrace->toString());
