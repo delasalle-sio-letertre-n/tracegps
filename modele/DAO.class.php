@@ -1173,7 +1173,7 @@ class DAO
         
         // extraction des données
         $req2->execute();
-
+        
         $req2->closeCursor();
         
         
@@ -1192,9 +1192,8 @@ class DAO
         
         if($uneLigne == NULL)
             return false;
-        else return true;
+            else return true;
     }
-    
     
     
     
