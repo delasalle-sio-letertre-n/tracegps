@@ -587,9 +587,8 @@ class DAO
         
         while ($uneLigne) {
             // ajout de l'id de la trace à la collection
-            $unIdTrace = utf8_encode($uneLigne->id);
+            $tousLesIdDeTraces[] = utf8_encode($uneLigne->id);
             // extrait la ligne suivante
-            $tousLesIdDeTraces[] = $unIdTrace;
             $uneLigne = $req->fetch(PDO::FETCH_OBJ);
         }
         
