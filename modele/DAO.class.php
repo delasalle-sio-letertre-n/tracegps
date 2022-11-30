@@ -1185,7 +1185,7 @@ class DAO
             $txt_req1 = "SELECT dateHeure";
             $txt_req1 .= " FROM tracegps_points";
             $txt_req1 .= " WHERE idTrace = :idTrace";
-            $txt_req1 .= " ORDER BY id";
+            $txt_req1 .= " ORDER BY id ASC";
             $txt_req1 .= " LIMIT 1";
             
             $req1 = $this->cnx->prepare($txt_req1);
