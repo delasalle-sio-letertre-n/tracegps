@@ -55,7 +55,7 @@ else {
 // test de la méthode supprimerUneTrace -----------------------------------------------------------
 // modifié par Jimmy Le Goff le 22/11/2022
 echo "<h3>Test de supprimerUneTrace : </h3>";
-$ok = $dao->supprimerUneTrace(23);
+$ok = $dao->supprimerUneTrace(18);
 if ($ok) {
     echo "<p>Trace bien supprimée !</p>";
 }
