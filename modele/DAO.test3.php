@@ -83,6 +83,8 @@ echo ($laTrace->toString());
 echo ('<br>');
 
 
+
+//test
 // ferme la connexion à MySQL :
 unset($dao);
 ?>
