@@ -1,4 +1,9 @@
 <?php
+
+
+// URL DE TEST : http://localhost/ws-php-letertre/tracegps/api/DemanderUneAutorisation?pseudo=europa&mdp=13e3668bbee30b004380052b086457b014504b3e&pseudoDestinataire=nicolas&texteMessage=coucou&nomPrenom=francois-cluzet&lang=xml
+
+
 // Projet TraceGPS - services web
 // fichier :  api/services/DemanderUneAutorisation.php
 // Dernière mise à jour : 330/11/2022 par Nicolas Le Tertre
@@ -22,13 +27,13 @@ global $ADR_MAIL_EMETTEUR, $ADR_SERVICE_WEB;
 $dao = new DAO();
 
 // Récupération des données transmises
-$pseudo = ( empty($this->request['a'])) ? "" : $this->request['a'];
-$mdp = ( empty($this->request['b'])) ? "" : $this->request['b'];
-$pseudoDestinataire = ( empty($this->request['c'])) ? "" : $this->request['c'];
-$texteMessage = ( empty($this->request['d'])) ? "" : $this->request['d'];
-$nomPrenom = ( empty($this->request['e'])) ? "" : $this->request['e'];
-$lang = ( empty($this->request['f'])) ? "" : $this->request['f'];
-			 
+$pseudo = ( empty($this->request['pseudo'])) ? "" : $this->request['pseudo'];
+$mdp = ( empty($this->request['mdp'])) ? "" : $this->request['mdp'];
+$pseudoDestinataire = ( empty($this->request['pseudoDestinataire'])) ? "" : $this->request['pseudoDestinataire'];
+$texteMessage = ( empty($this->request['texteMessage'])) ? "" : $this->request['texteMessage'];
+$nomPrenom = ( empty($this->request['nomPrenom'])) ? "" : $this->request['nomPrenom'];
+$lang = ( empty($this->request['lang'])) ? "" : $this->request['lang'];
+
 // La méthode HTTP utilisée doit être GET
 if ($this->getMethodeRequete() != "GET")
 {	$msg = "Erreur : méthode HTTP incorrecte.";
@@ -37,24 +42,25 @@ if ($this->getMethodeRequete() != "GET")
 else {
     // Les paramètres doivent être présents et corrects
     if ( $pseudo == "" || $mdp == "" || $pseudoDestinataire == "" || $texteMessage == "" || $nomPrenom == "" || $lang == "")
-    {	$message = "Erreur : données incomplètes ou incorrectes.";
+    {	$message = "Erreur : données incomplètes.";
         $code_reponse = 400;
     }
     else
     {	// test de l'authentification de l'utilisateur
     	// la méthode getNiveauConnexion de la classe DAO retourne les valeurs 0 (non identifié) ou 1 (utilisateur) ou 2 (administrateur)
-    	$niveauConnexion = $dao->getNiveauConnexion($pseudoAutorisant, $mdpSha1);
+    	$niveauConnexion = $dao->getNiveauConnexion($pseudo, $mdp);
     
     	if ( $niveauConnexion == 0 )
     	{  $message = "Erreur : authentification incorrecte.";
     	   $code_reponse = 401;
     	}
     	else
-    	{	$utilisateurDemandeur = $dao->getUnUtilisateur($pseudoAutorise);
-            $utilisateurDestinataire = $dao->getUnUtilisateur($pseudoAutorisant);
+    	{	$utilisateurDemandeur = $dao->getUnUtilisateur($pseudo);
+            $utilisateurDestinataire = $dao->getUnUtilisateur($pseudoDestinataire);
             $idAutorisant = $utilisateurDestinataire->getId();
-            $idAutorise = $utilisateurDemandeur->getId();
-            $adrMailDemandeur = $utilisateurDemandeur->getAdrMail();
+            $idAutorise = $utilisateurDemandeur->getId();            
+            $adrMailDestinataire = $utilisateurDestinataire->getAdrMail();
+
             
             if ($dao->autoriseAConsulter($idAutorisant, $idAutorise))
             {	$message = "Erreur : autorisation déjà accordée.";
@@ -62,52 +68,32 @@ else {
             }
             else 
             {
-        		if ( $decision == "1" )   // acceptation de la demande
-        		{   // enregistrement de l'autorisation dans la bdd
-        		    $ok = $dao->creerUneAutorisation($idAutorisant, $idAutorise);
-        		    if ( ! $ok ) 
-        		    {   $message = "Erreur : problème lors de l'enregistrement.";
-                        $code_reponse = 500;
-        		    }
-        		    else 
-        		    {   // envoi d'un mail d'acceptation à l'intéressé
-            			$sujetMail = "Votre demande d'autorisation à un utilisateur du système TraceGPS";
-            			$contenuMail = "Cher ou chère " . $pseudoAutorise . "\n\n";
-            			$contenuMail .= "Vous avez demandé à " . $pseudoAutorisant . " l'autorisation de consulter ses parcours.\n";
-            			$contenuMail .= "Votre demande a été acceptée.\n\n";
-            			$contenuMail .= "Cordialement.\n";
-            			$contenuMail .= "L'administrateur du système TraceGPS";
-            			$ok = Outils::envoyerMail($adrMailDemandeur, $sujetMail, $contenuMail, $ADR_MAIL_EMETTEUR);
-            			if ( ! $ok ) {
-            			    $message = "Erreur : l'envoi du courriel au demandeur a rencontré un problème.";
-            			    $code_reponse = 500;
-            			}
-            			else {
-            			    $message = "Autorisation enregistrée.<br>Le demandeur va recevoir un courriel de confirmation.";
-            			    $code_reponse = 200;
-            			}
-            		}
-        		}
-        		else {    // refus de la demande
-        			// envoi d'un mail de rejet à l'intéressé
-        		    $sujetMail = "Votre demande d'autorisation à un utilisateur du système TraceGPS";
-        		    $contenuMail = "Cher ou chère " . $pseudoAutorise . "\n\n";
-        		    $contenuMail .= "Vous avez demandé à " . $pseudoAutorisant . " l'autorisation de consulter ses parcours.\n";
-        		    $contenuMail .= "Votre demande a été refusée.\n\n";
-        		    $contenuMail .= "Cordialement.\n";
-        		    $contenuMail .= "L'administrateur du système TraceGPS";
-        		    $ok = Outils::envoyerMail($adrMailDemandeur, $sujetMail, $contenuMail, $ADR_MAIL_EMETTEUR);
-        		    if ( ! $ok ) {
-        		        $message = "Erreur : l'envoi du courriel au demandeur a rencontré un problème.";
-        		        $code_reponse = 500;
-        		    }
-        		    else {
-    			        $message = "Autorisation refusée.<br>Le demandeur va recevoir un courriel de confirmation.";
-    			        $code_reponse = 200;
-        		    }
-        		}	
+                $lien = "http://localhost/ws-php-letertre/tracegps/api/ValiderDemandeAutorisation?a=".$utilisateurDestinataire->getMdpSha1()."&b=".$pseudoDestinataire."&c=".$pseudo."&d=";
+                // envoi d'un mail de demande d'autorisation au concerné
+                $sujetMail = "Votre demande d'autorisation à un utilisateur du système TraceGPS";
+                $contenuMail = "Cher ou chère " . $pseudoDestinataire . "\n\n";
+                $contenuMail .= "Un utilisateur du système TraceGPS vous demande l'autorisation de suivre vos parcours.\n";
+                $contenuMail .= "Voici les données le concernant :\n\n";
+            	$contenuMail .= "Son pseudo : " . $pseudo ."\n";
+            	$contenuMail .= "Son adresse mail : " . $utilisateurDemandeur->getAdrMail() ."\n";
+            	$contenuMail .= "Son numéro de téléphone : " . $utilisateurDemandeur->getNumTel() ."\n";
+            	$contenuMail .= "Son nom et prénom : " . $nomPrenom ."\n";
+            	$contenuMail .= "Son message : " . $texteMessage ."\n\n";
+            	$contenuMail .= "Pour accepter la demande, cliquez sur ce lien :\n";
+            	$contenuMail .= $lien."1\n\n";
+            	$contenuMail .= "Pour rejeter la demande, cliquez sur ce lien :\n";
+            	$contenuMail .= $lien."0\n\n";
+            	$ok = Outils::envoyerMail($adrMailDestinataire, $sujetMail, $contenuMail, $ADR_MAIL_EMETTEUR);
+            	if ( ! $ok ) {
+            	    $message = "Erreur : l'envoi du courriel de demande d'autorisation a rencontré un problème.";
+            	    $code_reponse = 500;
+            	}
+            	else {
+            		$message = $pseudoDestinataire." va recevoir un courriel avec votre demande.";
+            		$code_reponse = 200;
+            	}
             }
-    	}
+    	}	
     }
 }
 unset($dao);   // ferme la connexion à MySQL
