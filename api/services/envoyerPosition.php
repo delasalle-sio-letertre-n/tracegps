@@ -8,6 +8,12 @@ $dao = new DAO();
 // Récupération des données transmises
 $pseudo = ( empty($this->request['pseudo'])) ? "" : $this->request['pseudo'];
 $mdpSha1 = ( empty($this->request['mdp'])) ? "" : $this->request['mdp'];
+$idTrace = ( empty($this->request['idTrace'])) ? "" : $this->request['idTrace'];
+$dateHeure = ( empty($this->request['dateHeure'])) ? "" : $this->request['dateHeure'];
+$latitude = ( empty($this->request['latitude'])) ? "" : $this->request['latitude'];
+$longitude = ( empty($this->request['longitude'])) ? "" : $this->request['longitude'];
+$altitude = ( empty($this->request['altitude'])) ? "" : $this->request['altitude'];
+$rythmeCardio = ( empty($this->request['rythmeCardio'])) ? "" : $this->request['rythmeCardio'];
 $lang = ( empty($this->request['lang'])) ? "" : $this->request['lang'];
 
 // "xml" par défaut si le paramètre lang est absent ou incorrect
@@ -16,7 +22,7 @@ if ($lang != "json") $lang = "xml";
 // initialisation du nombre de réponses
 $nbReponses = 0;
 $lesUtilisateursAutorisant = array();
-$idUtilisateur = $dao->getUnUtilisateur($pseudo)->getId();
+
 
 // La méthode HTTP utilisée doit être GET
 if ($this->getMethodeRequete() != "GET")
@@ -30,28 +36,39 @@ else {
         $code_reponse = 400;
     }
     else
-    {	if ( $dao->getNiveauConnexion($pseudo, $mdpSha1) == 0 ) {
+    {
+        if ( $dao->getNiveauConnexion($pseudo, $mdpSha1) == 0 ) 
+        {
     		$msg = "Erreur : authentification incorrecte.";
     		$code_reponse = 401;
         }
-    	else 
-    	{    // récupération de la liste des utilisateurs autorisant à l'aide de la méthode getLesUtilisateursAutorisant de la classe DAO
-    	    $lesUtilisateursAutorisant = $dao->getLesUtilisateursAutorisant($idUtilisateur);
-    	    
-    	    // mémorisation du nombre d'utilisateurs
-    	    $nbReponses = sizeof($lesUtilisateursAutorisant);
-    	
-    	    if ($nbReponses == 0) {
-    	        $msg = "Aucune autorisation accordée à " . $pseudo;
-    			$code_reponse = 200;
-    	    }
-    	    else {
-    	        $msg = $nbReponses . " autorisation(s) accordée(s) à " . $pseudo;
-    			$code_reponse = 200;
-    	    }
-    	}
+        
+        else 
+        {
+            
+            if  ( $dao->getUneTrace($idTrace) ==  0)
+            {
+                $msg = "Erreur : le numéro de trace n'existe pas.";
+                $code_reponse = 402;
+            }
+            else 
+            {
+                $idUtilisateur = $dao->getUnUtilisateur($pseudo)->getId();
+                
+                if ( $dao->getUneTrace($idTrace)->getIdUtilisateur() != $idUtilisateur ) {
+                    $msg =  "Erreur : le numéro de trace ne correspond pas à cet utilisateur.";
+                    $code_reponse = 403;
+            }
+            }
+        }
     }
+
 }
+    
+        
+    	   
+
+
 // ferme la connexion à MySQL :
 unset($dao);
 

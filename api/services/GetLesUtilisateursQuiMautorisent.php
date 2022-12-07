@@ -1,7 +1,7 @@
 <?php
 // Projet TraceGPS - services web
 // fichier : api/services/GetLesUtilisateursQuiMautorisent.php
-
+//test
 // connexion du serveur web à la base MySQL
 $dao = new DAO();
 	
