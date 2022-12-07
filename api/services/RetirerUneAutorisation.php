@@ -1,12 +1,12 @@
 <?php
 
 
-// URL DE TEST : http://localhost/ws-php-letertre/tracegps/api/DemanderUneAutorisation?pseudo=europa&mdp=13e3668bbee30b004380052b086457b014504b3e&pseudoDestinataire=nicolas&texteMessage=coucou&nomPrenom=francois-cluzet&lang=xml
+// URL DE TEST : http://localhost/ws-php-letertre/tracegps/api/RetirerUneAutorisation?pseudo=europa&mdp=13e3668bbee30b004380052b086457b014504b3e&pseudoARetirer=nicolas&texteMessage=fini&lang=xml
 
 
 // Projet TraceGPS - services web
 // fichier :  api/services/DemanderUneAutorisation.php
-// Dernière mise à jour : 330/11/2022 par Nicolas Le Tertre A 100 %
+// Dernière mise à jour : 330/11/2022 par Nicolas Le Tertre
 
 // Rôle : ce service web permet à un utilisateur destinataire d'accepter ou de rejeter une demande d'autorisation provenant d'un utilisateur demandeur
 // il envoie un mail au demandeur avec la décision de l'utilisateur destinataire
@@ -29,9 +29,8 @@ $dao = new DAO();
 // Récupération des données transmises
 $pseudo = ( empty($this->request['pseudo'])) ? "" : $this->request['pseudo'];
 $mdp = ( empty($this->request['mdp'])) ? "" : $this->request['mdp'];
-$pseudoDestinataire = ( empty($this->request['pseudoDestinataire'])) ? "" : $this->request['pseudoDestinataire'];
+$pseudoARetirer = ( empty($this->request['pseudoARetirer'])) ? "" : $this->request['pseudoARetirer'];
 $texteMessage = ( empty($this->request['texteMessage'])) ? "" : $this->request['texteMessage'];
-$nomPrenom = ( empty($this->request['nomPrenom'])) ? "" : $this->request['nomPrenom'];
 $lang = ( empty($this->request['lang'])) ? "" : $this->request['lang'];
 
 // La méthode HTTP utilisée doit être GET
@@ -41,7 +40,7 @@ if ($this->getMethodeRequete() != "GET")
 }
 else {
     // Les paramètres doivent être présents et corrects
-    if ( $pseudo == "" || $mdp == "" || $pseudoDestinataire == "" || $texteMessage == "" || $nomPrenom == "" || $lang == "")
+    if ( $pseudo == "" || $mdp == "" || $pseudoARetirer == "" || $texteMessage == "" || $lang == "")
     {	$message = "Erreur : données incomplètes.";
         $code_reponse = 400;
     }
@@ -56,59 +55,49 @@ else {
     	}
     	else
     	{	$utilisateurDemandeur = $dao->getUnUtilisateur($pseudo);
-            $utilisateurDestinataire = $dao->getUnUtilisateur($pseudoDestinataire);
-            $idAutorisant = $utilisateurDestinataire->getId();
-            $idAutorise = $utilisateurDemandeur->getId();            
+    	    $utilisateurDestinataire = $dao->getUnUtilisateur($pseudoARetirer);
+            $idDestinataire = $utilisateurDestinataire->getId();
+            $idDemandeur = $utilisateurDemandeur->getId();            
             $adrMailDestinataire = $utilisateurDestinataire->getAdrMail();
 
             
-            if ($dao->autoriseAConsulter($idAutorisant, $idAutorise))
-            {	$message = "Erreur : autorisation déjà accordée.";
+            if ( !$dao->autoriseAConsulter($idDemandeur, $idDestinataire))
+            {	$message = "Erreur : autorisation inexistante.";
                 $code_reponse = 400;
             }
             else 
             {
-                $lien = "http://localhost/ws-php-letertre/tracegps/api/ValiderDemandeAutorisation?a=".$utilisateurDestinataire->getMdpSha1()."&b=".$pseudoDestinataire."&c=".$pseudo."&d=";
+                $dao->supprimerUneAutorisation($idDemandeur, $idDestinataire);
                 // envoi d'un mail de demande d'autorisation au concerné
-                $sujetMail = "Votre demande d'autorisation à un utilisateur du système TraceGPS";
-                $contenuMail = "Cher ou chère " . $pseudoDestinataire . "\n\n";
-                $contenuMail .= "Un utilisateur du système TraceGPS vous demande l'autorisation de suivre vos parcours.\n";
-                $contenuMail .= "Voici les données le concernant :\n\n";
-            	$contenuMail .= "Son pseudo : " . $pseudo ."\n";
-            	$contenuMail .= "Son adresse mail : " . $utilisateurDemandeur->getAdrMail() ."\n";
-            	$contenuMail .= "Son numéro de téléphone : " . $utilisateurDemandeur->getNumTel() ."\n";
-            	$contenuMail .= "Son nom et prénom : " . $nomPrenom ."\n";
+                $sujetMail = "Suppression d'autorisation de la part d'un utilisateur du système TraceGPS";
+                $contenuMail = "Cher ou chère " . $pseudoARetirer . "\n\n";
+                $contenuMail .= "L'utilisateur ".$pseudo." du système TraceGPS vous retire l'autorisation de suivre ses parcours.\n\n";
             	$contenuMail .= "Son message : " . $texteMessage ."\n\n";
-            	$contenuMail .= "Pour accepter la demande, cliquez sur ce lien :\n";
-            	$contenuMail .= $lien."1\n\n";
-            	$contenuMail .= "Pour rejeter la demande, cliquez sur ce lien :\n";
-            	$contenuMail .= $lien."0\n\n";
+            	$contenuMail .= "Cordialement,\n";
+            	$contenuMail .= "L'administrateur du système TraceGPS";
             	$ok = Outils::envoyerMail($adrMailDestinataire, $sujetMail, $contenuMail, $ADR_MAIL_EMETTEUR);
             	if ( ! $ok ) {
             	    $message = "Erreur : l'envoi du courriel de demande d'autorisation a rencontré un problème.";
             	    $code_reponse = 500;
             	}
             	else {
-            		$message = $pseudoDestinataire." va recevoir un courriel avec votre demande.";
+            	    $message = $pseudoARetirer." va recevoir un courriel avec votre demande.";
             		$code_reponse = 200;
             	}
             }
     	}	
     }
 }
-// ferme la connexion à MySQL :
-unset($dao);
+unset($dao);   // ferme la connexion à MySQL
 
 // création du flux en sortie
-if ($lang == "xml")
-{
-    $content_type = "application/xml; charset=utf-8"; // indique le format XML pour la réponse
-    $donnees = creerFluxXML($message);
+if ($lang == "xml") {
+    $content_type = "application/xml; charset=utf-8";      // indique le format XML pour la réponse
+    $donnees = creerFluxXML ($message);
 }
-else
-{
-    $content_type = "application/json; charset=utf-8"; // indique le format Json pour la réponse
-    $donnees = creerFluxJSON($message);
+else {
+    $content_type = "application/json; charset=utf-8";      // indique le format Json pour la réponse
+    $donnees = creerFluxJSON ($message);
 }
 
 // envoi de la réponse HTTP
@@ -118,14 +107,15 @@ $this->envoyerReponse($code_reponse, $content_type, $donnees);
 exit;
 
 // ================================================================================================
+
 // création du flux XML en sortie
 function creerFluxXML($msg)
 {
     /* Exemple de code XML
      <?xml version="1.0" encoding="UTF-8"?>
-     <!--Service web ChangerDeMdp - BTS SIO - Lycée De La Salle - Rennes-->
+     <!--Service web Connecter - BTS SIO - Lycée De La Salle - Rennes-->
      <data>
-     <reponse>Erreur : authentification incorrecte.</reponse>
+     <reponse>Erreur : données incomplètes.</reponse>
      </data>
      */
     
@@ -137,7 +127,7 @@ function creerFluxXML($msg)
     $doc->encoding = 'UTF-8';
     
     // crée un commentaire et l'encode en UTF-8
-    $elt_commentaire = $doc->createComment('Service web ChangerDeMdp - BTS SIO - Lycée De La Salle - Rennes');
+    $elt_commentaire = $doc->createComment('Service web Connecter - BTS SIO - Lycée De La Salle - Rennes');
     // place ce commentaire à la racine du document XML
     $doc->appendChild($elt_commentaire);
     
@@ -157,27 +147,31 @@ function creerFluxXML($msg)
 }
 
 // ================================================================================================
+
 // création du flux JSON en sortie
 function creerFluxJSON($msg)
 {
     /* Exemple de code JSON
      {
-     "data": {
-     "reponse": "Erreur : authentification incorrecte."
+     "data":{
+     "reponse": "authentification incorrecte."
      }
      }
      */
     
+    // 2 notations possibles pour créer des tableaux associatifs (la deuxième est en commentaire)
+    
     // construction de l'élément "data"
     $elt_data = ["reponse" => $msg];
+    //     $elt_data = array("reponse" => $msg);
     
     // construction de la racine
     $elt_racine = ["data" => $elt_data];
+    //     $elt_racine = array("data" => $elt_data);
     
     // retourne le contenu JSON (l'option JSON_PRETTY_PRINT gère les sauts de ligne et l'indentation)
     return json_encode($elt_racine, JSON_PRETTY_PRINT);
 }
 
 // ================================================================================================
-
 ?>
