@@ -1,20 +1,18 @@
 <?php
-// Projet TraceGPS - services web
-// fichier : api/services/GetLesUtilisateursQuiMautorisent.php
-
 // connexion du serveur web à la base MySQL
+include_once ('../modele/DAO.class.php');
 $dao = new DAO();
-	
+
 // Récupération des données transmises
 $pseudo = ( empty($this->request['pseudo'])) ? "" : $this->request['pseudo'];
 $mdpSha1 = ( empty($this->request['mdp'])) ? "" : $this->request['mdp'];
+$lang = ( empty($this->request['lang'])) ? "" : $this->request['lang'];
 $idTrace = ( empty($this->request['idTrace'])) ? "" : $this->request['idTrace'];
 $dateHeure = ( empty($this->request['dateHeure'])) ? "" : $this->request['dateHeure'];
 $latitude = ( empty($this->request['latitude'])) ? "" : $this->request['latitude'];
 $longitude = ( empty($this->request['longitude'])) ? "" : $this->request['longitude'];
 $altitude = ( empty($this->request['altitude'])) ? "" : $this->request['altitude'];
 $rythmeCardio = ( empty($this->request['rythmeCardio'])) ? "" : $this->request['rythmeCardio'];
-$lang = ( empty($this->request['lang'])) ? "" : $this->request['lang'];
 
 // "xml" par défaut si le paramètre lang est absent ou incorrect
 if ($lang != "json") $lang = "xml";
@@ -45,8 +43,7 @@ else {
         
         else 
         {
-            
-            if  ( $dao->getUneTrace($idTrace) ==  0)
+            if  ( $dao->getUneTrace($idTrace) ==  null)
             {
                 $msg = "Erreur : le numéro de trace n'existe pas.";
                 $code_reponse = 402;
@@ -55,24 +52,50 @@ else {
             {
                 $idUtilisateur = $dao->getUnUtilisateur($pseudo)->getId();
                 
-                if ( $dao->getUneTrace($idTrace)->getIdUtilisateur() != $idUtilisateur ) {
+                if ( $dao->getUneTrace($idTrace)->getIdUtilisateur() != $idUtilisateur ) 
+                {
                     $msg =  "Erreur : le numéro de trace ne correspond pas à cet utilisateur.";
                     $code_reponse = 403;
-            }
+                }
+                else 
+                {
+                    if ( $dao->getUneTrace($idTrace)->getTerminee() == 1)
+                    {
+                        $msg = "Erreur : la trace est déjà terminée.";
+                        $code_reponse = 404;
+                    }
+                    
+                    else
+                    {
+                        $laTrace = $dao->getUneTrace($idTrace);
+                        $idPoint = $laTrace->getNombrePoints() + 1;
+                        //création du point
+                        $unTempsCumule = 0;
+                        $uneDistanceCumulee = 0;
+                        $uneVitesse = 0;
+                        $unPoint = new PointDeTrace($idTrace, $idPoint, $latitude, $longitude, $altitude, $dateHeure, $rythmeCardio, $unTempsCumule, $uneDistanceCumulee, $uneVitesse);
+                        $ok = $dao->creerUnPointDeTrace($unPoint);
+                        
+                        if(! $ok){
+                            $msg = "Erreur : problème lors de l'enregistrement du point";
+                            $code_reponse = 405;
+                        }
+                        else{
+                            $code_reponse = 406;
+                            $msg = "Point " . $idPoint . " créé.";
+                        }
+                    }
+                }
             }
         }
     }
-
 }
-    
-        
-    	   
 
 
-// ferme la connexion à MySQL :
+
 unset($dao);
-
 // création du flux en sortie
+
 if ($lang == "xml") {
     $content_type = "application/xml; charset=utf-8";      // indique le format XML pour la réponse
     $donnees = creerFluxXML($msg, $lesUtilisateursAutorisant);
@@ -135,7 +158,7 @@ function creerFluxXML($msg, $lesUtilisateursAutorises)
     $doc->encoding = 'UTF-8';
     
     // crée un commentaire et l'encode en UTF-8
-    $elt_commentaire = $doc->createComment('Service web getLesUtilisateursAutorisant  - BTS SIO - Lycée De La Salle - Rennes');
+    $elt_commentaire = $doc->createComment('Service web envoyerPosition  - BTS SIO - Lycée De La Salle - Rennes');
     // place ce commentaire à la racine du document XML
     $doc->appendChild($elt_commentaire);
     
