@@ -1,9 +1,6 @@
 <?php
 
 
-// URL DE TEST : http://localhost/ws-php-letertre/tracegps/api/RetirerUneAutorisation?pseudo=europa&mdp=13e3668bbee30b004380052b086457b014504b3e&pseudoARetirer=nicolas&texteMessage=fini&lang=xml
-
-
 // Projet TraceGPS - services web
 // fichier :  api/services/DemanderUneAutorisation.php
 // Dernière mise à jour : 330/11/2022 par Nicolas Le Tertre
@@ -19,9 +16,6 @@
 
 // Les paramètres doivent être passés par la méthode GET :
 //     http://<hébergeur>/tracegps/api/DemandrUneeAutorisation......
-	
-// ces variables globales sont définies dans le fichier modele/parametres.php
-global $ADR_MAIL_EMETTEUR, $ADR_SERVICE_WEB;
 
 // connexion du serveur web à la base MySQL
 $dao = new DAO();
@@ -29,8 +23,7 @@ $dao = new DAO();
 // Récupération des données transmises
 $pseudo = ( empty($this->request['pseudo'])) ? "" : $this->request['pseudo'];
 $mdp = ( empty($this->request['mdp'])) ? "" : $this->request['mdp'];
-$pseudoARetirer = ( empty($this->request['pseudoARetirer'])) ? "" : $this->request['pseudoARetirer'];
-$texteMessage = ( empty($this->request['texteMessage'])) ? "" : $this->request['texteMessage'];
+$idTrace = ( empty($this->request['idTrace'])) ? "" : $this->request['idTrace'];
 $lang = ( empty($this->request['lang'])) ? "" : $this->request['lang'];
 
 // La méthode HTTP utilisée doit être GET
@@ -40,7 +33,7 @@ if ($this->getMethodeRequete() != "GET")
 }
 else {
     // Les paramètres doivent être présents et corrects
-    if ( $pseudo == "" || $mdp == "" || $pseudoARetirer == "" || $texteMessage == "" || $lang == "")
+    if ( $pseudo == "" || $mdp == "" || $idTrace == "" || $lang == "")
     {	$message = "Erreur : données incomplètes.";
         $code_reponse = 400;
     }
@@ -53,37 +46,31 @@ else {
     	{  $message = "Erreur : authentification incorrecte.";
     	   $code_reponse = 401;
     	}
-    	else
-    	{	$utilisateurDemandeur = $dao->getUnUtilisateur($pseudo);
-    	    $utilisateurDestinataire = $dao->getUnUtilisateur($pseudoARetirer);
-            $idDestinataire = $utilisateurDestinataire->getId();
-            $idDemandeur = $utilisateurDemandeur->getId();            
-            $adrMailDestinataire = $utilisateurDestinataire->getAdrMail();
-
-            
-            if ( !$dao->autoriseAConsulter($idDemandeur, $idDestinataire))
-            {	$message = "Erreur : autorisation inexistante.";
-                $code_reponse = 400;
+    	else{
+    	    if ( !$dao->getUneTrace($idTrace))
+    	    {  
+    	        $message = "Erreur : parcours inexistant.";
+    	        $code_reponse = 400;
             }
-            else 
-            {
-                $dao->supprimerUneAutorisation($idDemandeur, $idDestinataire);
-                // envoi d'un mail de demande d'autorisation au concerné
-                $sujetMail = "Suppression d'autorisation de la part d'un utilisateur du système TraceGPS";
-                $contenuMail = "Cher ou chère " . $pseudoARetirer . "\n\n";
-                $contenuMail .= "L'utilisateur ".$pseudo." du système TraceGPS vous retire l'autorisation de suivre ses parcours.\n\n";
-            	$contenuMail .= "Son message : " . $texteMessage ."\n\n";
-            	$contenuMail .= "Cordialement,\n";
-            	$contenuMail .= "L'administrateur du système TraceGPS";
-            	$ok = Outils::envoyerMail($adrMailDestinataire, $sujetMail, $contenuMail, $ADR_MAIL_EMETTEUR);
-            	if ( ! $ok ) {
-            	    $message = "Erreur : l'envoi du courriel de demande d'autorisation a rencontré un problème.";
-            	    $code_reponse = 500;
-            	}
-            	else {
-            	    $message = $pseudoARetirer." va recevoir un courriel avec votre demande.";
-            		$code_reponse = 200;
-            	}
+            else{
+                $Trace = $dao->getUneTrace($idTrace);
+                $Utilisateur = $dao->getUnUtilisateur($pseudo);
+                if($Trace->getIdUtilisateur() != $Utilisateur->getId())
+                {
+                    $message = "Erreur : le numéro de trace ne correspond pas à cet utilisateur.";
+                    $code_reponse = 400;
+                }
+                else{
+                    if ($Trace->getTerminee()) {
+                        $message = "Erreur : cette trace est déjà terminée.";
+                        $code_reponse = 400;
+                    }
+                    else {
+                        $dao->terminerUneTrace($idTrace);
+                        $message = "Enregistrement terminé.";
+                        $code_reponse = 200;
+                    }
+                }
             }
     	}	
     }
@@ -127,7 +114,7 @@ function creerFluxXML($msg)
     $doc->encoding = 'UTF-8';
     
     // crée un commentaire et l'encode en UTF-8
-    $elt_commentaire = $doc->createComment('Service web RetirerUneAutorisation - BTS SIO - Lycée De La Salle - Rennes');
+    $elt_commentaire = $doc->createComment('Service web ArreterEnregistrementParcours - BTS SIO - Lycée De La Salle - Rennes');
     // place ce commentaire à la racine du document XML
     $doc->appendChild($elt_commentaire);
     
