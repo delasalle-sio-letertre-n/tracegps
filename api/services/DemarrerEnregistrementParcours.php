@@ -25,6 +25,8 @@ $pseudo = ( empty($this->request['pseudo'])) ? "" : $this->request['pseudo'];
 $mdp = ( empty($this->request['mdp'])) ? "" : $this->request['mdp'];
 $lang = ( empty($this->request['lang'])) ? "" : $this->request['lang'];
 
+$laTrace = NULL;
+
 // La méthode HTTP utilisée doit être GET
 if ($this->getMethodeRequete() != "GET")
 {	$message = "Erreur : méthode HTTP incorrecte.";
@@ -48,8 +50,10 @@ else {
     	else{
                 $Utilisateur = $dao->getUnUtilisateur($pseudo);
                 date_default_timezone_set("Europe/Paris");
-                $nouvelleTrace = new Trace(NULL, date('Y-m-d H:i:s'), NULL, 0, $Utilisateur->getId());
+                $NbTraces = count($dao->getToutesLesTraces());
+                $nouvelleTrace = new Trace($NbTraces + 3, date('Y-m-d H:i:s'), NULL, 0, $Utilisateur->getId());
                 $dao->creerUneTrace($nouvelleTrace);
+                $laTrace = $dao->getUneTrace($NbTraces + 3);
                 $message = "Trace créée.";
                 $code_reponse = 200;
     	}
@@ -62,11 +66,11 @@ unset($dao);   // ferme la connexion à MySQL
 // création du flux en sortie
 if ($lang == "xml") {
     $content_type = "application/xml; charset=utf-8";      // indique le format XML pour la réponse
-    $donnees = creerFluxXML ($message);
+    $donnees = creerFluxXML ($message, $laTrace);
 }
 else {
     $content_type = "application/json; charset=utf-8";      // indique le format Json pour la réponse
-    $donnees = creerFluxJSON ($message);
+    $donnees = creerFluxJSON ($message, $laTrace);
 }
 
 // envoi de la réponse HTTP
@@ -78,7 +82,7 @@ exit;
 // ================================================================================================
 
 // création du flux XML en sortie
-function creerFluxXML($msg)
+function creerFluxXML($msg, Trace $laTrace)
 {
     /* Exemple de code XML
      <?xml version="1.0" encoding="UTF-8"?>
@@ -108,6 +112,28 @@ function creerFluxXML($msg)
     $elt_reponse = $doc->createElement('reponse', $msg);
     $elt_data->appendChild($elt_reponse);
     
+    // place l'élément 'donnees' juste après l'élément 'data'
+    $elt_donnees = $doc->createElement('donnees');
+    $elt_data->appendChild($elt_donnees);
+    
+    $elt_trace = $doc->createElement('trace');
+    $elt_donnees->appendChild($elt_trace);
+    
+    
+    $elt_id = $doc->createElement('id', $laTrace->getId());
+    $elt_trace->appendChild($elt_id);
+    
+    $elt_dateHeureDebut = $doc->createElement('dateHeureDebut', $laTrace->getDateHeureDebut());
+    $elt_trace->appendChild($elt_dateHeureDebut);
+    
+    $elt_terminee = $doc->createElement('terminee', $laTrace->getTerminee());
+    $elt_trace->appendChild($elt_terminee);
+    
+    $elt_idUtilisateur = $doc->createElement('idUtilisateur', $laTrace->getIdUtilisateur());
+    $elt_trace->appendChild($elt_idUtilisateur);
+    
+
+    
     // Mise en forme finale
     $doc->formatOutput = true;
     
@@ -118,7 +144,7 @@ function creerFluxXML($msg)
 // ================================================================================================
 
 // création du flux JSON en sortie
-function creerFluxJSON($msg)
+function creerFluxJSON($msg, Trace $laTrace)
 {
     /* Exemple de code JSON
      {
@@ -130,13 +156,25 @@ function creerFluxJSON($msg)
     
     // 2 notations possibles pour créer des tableaux associatifs (la deuxième est en commentaire)
     
-    // construction de l'élément "data"
-    $elt_data = ["reponse" => $msg];
-    //     $elt_data = array("reponse" => $msg);
+    if ($laTrace == NULL) {
+        // construction de l'élément "data"
+        $elt_data = ["reponse" => $msg];
+    }
+    else {
+        $trace = array();
+        $trace["id"] = $laTrace->getId();
+        $trace["dateHeureDebut"] = $laTrace->getDateHeureDebut();
+        $trace["terminee"] = $laTrace->getTerminee();
+        $trace["idUtilisateur"] = $laTrace->getIdUtilisateur();
+        
+        $donnees = ["trace" => $trace];
+        
+        // construction de l'élément "data"
+        $elt_data = ["reponse" => $msg, "donnees" => $donnees];
+    }
     
     // construction de la racine
     $elt_racine = ["data" => $elt_data];
-    //     $elt_racine = array("data" => $elt_data);
     
     // retourne le contenu JSON (l'option JSON_PRETTY_PRINT gère les sauts de ligne et l'indentation)
     return json_encode($elt_racine, JSON_PRETTY_PRINT);
